@@ -9,7 +9,27 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // ── Firebase Admin initialize ──
-const serviceAccount = require('./serviceAccountKey.json');
+// The service account key NEVER goes into git.
+// Production: set the FIREBASE_SERVICE_ACCOUNT env variable to the FULL JSON
+// content of your service account key.
+// Local dev: keep serviceAccountKey.json next to this file (it's in .gitignore).
+let serviceAccount;
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  try {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  } catch (e) {
+    console.error('FIREBASE_SERVICE_ACCOUNT is not valid JSON');
+    process.exit(1);
+  }
+} else {
+  try {
+    serviceAccount = require('./serviceAccountKey.json');
+  } catch (e) {
+    console.error('Missing credentials: set the FIREBASE_SERVICE_ACCOUNT env variable '
+      + 'or place serviceAccountKey.json next to index.js (it is gitignored, never commit it)');
+    process.exit(1);
+  }
+}
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
